@@ -1,6 +1,6 @@
 # Welcome to the documentation's source of LVGL
 
-This the source of LVGL's documentation for the micropython bindings. It is the smee text as the lvgl docs (https://docs.lvgl.io/) where all examples are replaced with the micropython equivalent
+This the source of LVGL's documentation for the micropython bindings. It is the smee text as the lvgl docs (https://docs.lvgl.io/) where all examples are replaced with the MicroPython equivalent.
 
 ## Overview
 
