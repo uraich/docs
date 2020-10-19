@@ -1,11 +1,11 @@
 # Welcome to the documentation's source of LVGL
 
-This the source of LVGL's documentation avaialble on https://docs.lvgl.io
+This the source of LVGL's documentation for the micropython bindings. It is the smee text as the lvgl docs (https://docs.lvgl.io/) where all examples are replaced with the micropython equivalent
 
 ## Overview
 
 ### Tools
-The documentation is craeted with Sphinx and RTD theme and with the use of several extensions. See below.
+The documentation is created with Sphinx and RTD theme and with the use of several extensions. See below.
 
 ### Branches
 
