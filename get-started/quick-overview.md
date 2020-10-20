@@ -26,52 +26,26 @@ The following steps show how to setup LVGL on an embedded system with a display 
 - Call `lv_init()`
 - Create a display buffer for LVGL. LVGL will render the graphics here first, and seed the rendered image to the display. The buffer size can be set freely but 1/10 screen size is a good starting point. 
 ```c
-static lv_disp_buf_t disp_buf;
-static lv_color_t buf[LV_HOR_RES_MAX * LV_VER_RES_MAX / 10];                     /*Declare a buffer for 1/10 screen size*/
-lv_disp_buf_init(&disp_buf, buf, NULL, LV_HOR_RES_MAX * LV_VER_RES_MAX / 10);    /*Initialize the display buffer*/
+LV_HOR_RES_MAX=240                   # pixel resolution of your screen
+LV_VER_RES_MAX=240
+disp_buf = lv.disp_buf_t()
+buf = byte(LV_HOR_RES_MAX * LV_VER_RES_MAX // 10]     # Declare a buffer for 1/10 screen size
+disp_buf.init(buf,None,len(buf)                       # Initialize the display buffer
 ```
 - Implement and register a function which can **copy the rendered image** to an area of your display:
-```c
-lv_disp_drv_t disp_drv;               /*Descriptor of a display driver*/
-lv_disp_drv_init(&disp_drv);          /*Basic initialization*/
-disp_drv.flush_cb = my_disp_flush;    /*Set your driver function*/
-disp_drv.buffer = &disp_buf;          /*Assign the buffer to the display*/
-lv_disp_drv_register(&disp_drv);      /*Finally register the driver*/
+```python
+disp_drv = lv.disp_drv_t()                            # Descriptor of a display driver
+disp_drv-init()                                       # Basic initialization
+disp_drv.flush_cb = SDL.monitor_flush                 # Set your driver function in case SDL is used (Unix port of mpy)
+disp_drv.buffer = disp_buf                            # Assign the buffer to the display
+lv.disp_drv.register()                                # Finally register the drive/
 
-void my_disp_flush(lv_disp_drv_t * disp, const lv_area_t * area, lv_color_t * color_p)
-{
-    int32_t x, y;
-    for(y = area->y1; y <= area->y2; y++) {
-        for(x = area->x1; x <= area->x2; x++) {
-            set_pixel(x, y, *color_p);  /* Put a pixel to the display.*/
-            color_p++;
-        }
-    }
-
-    lv_disp_flush_ready(disp);         /* Indicate you are ready with the flushing*/
-}
-
-```
-- Implement and register a function which can **read an input device**. E.g. for a touch pad:
-```c
-lv_indev_drv_t indev_drv;                  /*Descriptor of a input device driver*/
-lv_indev_drv_init(&indev_drv);             /*Basic initialization*/
-indev_drv.type = LV_INDEV_TYPE_POINTER;    /*Touch pad is a pointer-like device*/
-indev_drv.read_cb = my_touchpad_read;      /*Set your driver function*/
-lv_indev_drv_register(&indev_drv);         /*Finally register the driver*/
-
-bool my_touchpad_read(lv_indev_t * indev, lv_indev_data_t * data)
-{
-    data->state = touchpad_is_pressed() ? LV_INDEV_STATE_PR : LV_INDEV_STATE_REL;
-    if(data->state == LV_INDEV_STATE_PR) touchpad_get_xy(&data->point.x, &data->point.y);
-
-    return false; /*Return `false` because we are not buffering and no more data to read*/
-}
-```
-- Call `lv_task_handler()` periodically every few milliseconds in the main `while(1)` loop, in Timer interrupt or in an Operation system task.
-It will redraw the screen if required, handle input devices etc.
+All the above is implemented in a script "init_gui.py", which should be imported before the code creating the GUI.
 
 For a more detailed guide go to the [Porting](https://docs.lvgl.io/v7/en/html/porting/index.html) section.
+
+- Call `lv.task_handler()` periodically every few milliseconds in the main `while(1)` loop, in Timer interrupt or in an Operation system task.
+It will redraw the screen if required, handle input devices etc.
 
 ## Learn the basics
 
@@ -89,45 +63,44 @@ A *screen* is the "root" parent. You can have any number of screens. To get the 
 You can create a new object with `lv_<type>_create(parent, obj_to_copy)`. It will return an `lv_obj_t *` variable which should be used as a reference to the object to set its parameters.
 The first parameter is the desired *parent*, the second parameters can be an object to copy (`NULL` if unused).
 For example:
-```c
-lv_obj_t * slider1 = lv_slider_create(lv_scr_act(), NULL);
+```python
+ slider1 = lv.slider(lv.scr_act(), None)
 ```
 
 To set some basic attribute `lv_obj_set_<paramters_name>(obj, <value>)` function can be used. For example:
-```c
-lv_obj_set_x(btn1, 30);
-lv_obj_set_y(btn1, 10);
-lv_obj_set_size(btn1, 200, 50);
+```python
+btn1=lv.btn(lv.scr_act(), None)
+btn1.set_x(30)
+btn1.set_y(10)
+btn1.set_size(200, 50)
 ```
 
-The objects has type specific parameters too which can be set by `lv_<type>_set_<paramters_name>(obj, <value>)` functions. For example:
-```c
-lv_slider_set_value(slider1, 70, LV_ANIM_ON);
+The objects has type specific parameters too which can be set by `lv.<type>.set_<paramters_name>(obj, <value>)` functions. For example:
+```python
+slider.set_value(70, lv._ANIM.ON);
 ```
 
-To see the full API visit the documentation of the widgets or the related header file (e.g. [lvgl/src/lv_widgets/lv_slider.h](https://github.com/lvgl/lvgl/blob/master/src/lv_widgets/lv_slider.h)).
+To see the full API visit the documentation of the widgets 
 
 ### Events
 Events are used to inform the user if something has happened with an object. You can assign a callback to an object which will be called if the object is clicked, released, dragged, being deleted etc. It should look like this:
 
-```c
-lv_obj_set_event_cb(btn, btn_event_cb);                 /*Assign a callback to the button*/
+```python
+btn.set_event_cb(btn_event_cb)                 # Assign a callback to the button
 
 ...
 
-void btn_event_cb(lv_obj_t * btn, lv_event_t event)
-{
-    if(event == LV_EVENT_CLICKED) {
-        printf("Clicked\n");
-    }
-}
+def btn_event_cb(btn, event)
+    if(event == LV_EVENT_CLICKED) 
+        print("Clicked");
+    
 ```
 
 Learn more about the events in the [Event overview](/overview/event) section.
 
 ### Parts
-Widgets might be built from one or more parts. For example a button has only one part called `LV_BTN_PART_MAIN`.
- However, a [Page](/widgets/page) has `LV_PAGE_PART_BG`, `LV_PAGE_PART_SCROLLABLE`, `LV_PAGE_PART_SCROLLBAR` and `LV_PAGE_PART_EDGE_FLASG`.
+Widgets might be built from one or more parts. For example a button has only one part called `lv.btn_PART.MAIN`.
+ However, a [Page](/widgets/page) has `lv.page.PART.BG`, `lv.page.PART.SCROLLABLE`, `lv.page.PART.SCROLLBAR` and `lv.page.PART.EDGE_FLASG`.
 
 Some parts are *virtual* (they are not real object, just drawn on the fly, such as the scrollbar of a page) but other parts are *real* (they are real object, such as the scrollable part of the page).
 
@@ -135,18 +108,18 @@ Parts come into play when you want to set the styles and states of a given part 
 
 ### States
 The objects can be in a combination of the following states:
-- **LV_STATE_DEFAULT** Normal, released
-- **LV_STATE_CHECKED** Toggled or checked
-- **LV_STATE_FOCUSED** Focused via keypad or encoder or clicked via touchpad/mouse
-- **LV_STATE_EDITED** Edit by an encoder
-- **LV_STATE_HOVERED** Hovered by mouse (not supported now)
-- **LV_STATE_PRESSED** Pressed
-- **LV_STATE_DISABLED** Disabled or inactive 
+- **lv.STATE.DEFAULT** Normal, released
+- **lv.STATE.CHECKED** Toggled or checked
+- **lv.STATE.FOCUSED** Focused via keypad or encoder or clicked via touchpad/mouse
+- **lv.STATE.EDITED** Edit by an encoder
+- **lv.STATE.HOVERED** Hovered by mouse (not supported now)
+- **lv.STATE.PRESSED** Pressed
+- **lv.STATE.DISABLED** Disabled or inactive 
 
 For example if you press an object is automatically get the `LV_STATE_PRESSED` state and when you release is it will be removed.
  
-To get the current state use `lv_obj_get_state(obj, part)`. It will return the `OR`ed states. 
-For example it's a valid state for a checkbox: `LV_STATE_CHECKED | LV_STATE_PRESSED | LV_STATE_FOCUSED`
+To get the current state use `obj.get_state(part)`. It will return the `OR`ed states. 
+For example it's a valid state for a checkbox: `lv.STATE.CHECKED | lv.STATE.PRESSED | lv.STATE.FOCUSED`
 
 ### Styles
 Styles can be assigned to the parts objects to changed their appearance. 
@@ -178,8 +151,8 @@ You can select the theme to use in `lv_conf.h`.
 .. image:: /lv_examples/src/lv_ex_get_started/lv_ex_get_started_1.*
   :alt: Simple button with label with LVGL
 
-.. literalinclude:: /lv_examples/src/lv_ex_get_started/lv_ex_get_started_1.c
-  :language: c
+.. literalinclude:: /lv_examples/src/lv_ex_get_started/lv_ex_get_started_1.py
+  :language: python
 ```
 
 
@@ -189,8 +162,8 @@ You can select the theme to use in `lv_conf.h`.
 .. image:: /lv_examples/src/lv_ex_get_started/lv_ex_get_started_2.*
   :alt: Styling buttons with LVGL
 
-.. literalinclude:: /lv_examples/src/lv_ex_get_started/lv_ex_get_started_2.c
-  :language: c
+.. literalinclude:: /lv_examples/src/lv_ex_get_started/lv_ex_get_started_2.py
+  :language: python
 ```
 
 
@@ -200,20 +173,7 @@ You can select the theme to use in `lv_conf.h`.
 .. image:: /lv_examples/src/lv_ex_get_started/lv_ex_get_started_3.*
   :alt: Create a slider with LVGL
 
-.. literalinclude:: /lv_examples/src/lv_ex_get_started/lv_ex_get_started_3.c
-  :language: c
+.. literalinclude:: /lv_examples/src/lv_ex_get_started/lv_ex_get_started_3.py
+  :language: python
 ```
 
-## Micropython
-Learn more about [Micropython](/get-started/micropython).
-```python
-# Create a Button and a Label
-scr = lv.obj()
-btn = lv.btn(scr)
-btn.align(lv.scr_act(), lv.ALIGN.CENTER, 0, 0)
-label = lv.label(btn)
-label.set_text("Button")
-
-# Load the screen
-lv.scr_load(scr)
-```
