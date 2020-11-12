@@ -111,7 +111,7 @@ The same functions exists for the y axis too: `lv_chart_set_y_tick_text` and `lv
 
 A cursor can be added with `lv_chart_cursor_t * c1 = lv_chart_add_cursor(chart, color, dir);`. The possible values of `dir`  `LV_CHART_CURSOR_NONE/RIGHT/UP/LEFT/DOWN` or their OR-ed values to tell in which direction(s) should the cursor be drawn.  
 
-`lv_chart_set_cursor_point(chart, cursor, &point)` sets the position of the cursor. `point` is a pointer to an `lv_poin_t` variable. E.g. `lv_point_t point = {10, 20};`. The point is relative to the series area of the chart.
+`lv_chart_set_cursor_point(chart, cursor, &point)` sets the position of the cursor. `point` is a pointer to an `lv_point_t` variable. E.g. `lv_point_t point = {10, 20};`. The point is relative to the series area of the chart.
 
 The `lv_coord_t p_index = lv_chart_get_nearest_index_from_coord(chart, x)` tells which point index is to the closest to a X coordinate (relative to the series area). It can be used to snap the cursor to a point for example when the chart is clicked.
 
