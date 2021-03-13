@@ -21,7 +21,7 @@ It can be enable with the `lv_line_set_auto_size(line, true)` function.
 If enabled then when the points are set the object's width and height will be changed according to the maximal x and y coordinates among the points. The *auto size* is enabled by default.
 
 ### Invert y
-By deafult, the *y == 0* point is in the top of the object. It might be conter-intuitive in some cases so the y coordinates can be inverted with `lv_line_set_y_invert(line, true)`. In this case,  *y == 0* will be the bottom of teh obejct. 
+By default, the *y == 0* point is in the top of the object. It might be conter-intuitive in some cases so the y coordinates can be inverted with `lv_line_set_y_invert(line, true)`. In this case,  *y == 0* will be the bottom of the object. 
 The *y invert* is disabled by default.
 
 ## Events
